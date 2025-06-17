@@ -47,17 +47,23 @@ const createBookHandler = (request, h) => {
     data: {
       bookId: id,
     },
-  });
+  }).code(201);
 };
 
 const indexBooksHandler = (request, h) => {
   const { name, reading, finished } = request.query;
 
 
-  const data = books.filter((book) => (name === undefined || book.name.includes(name)) &&
+  const filtered = books.filter((book) => (name === undefined || book.name.toLowerCase().includes(name.toLowerCase())) &&
     (reading === undefined || book.reading === (reading === '1')) &&
     (finished === undefined || book.finished === (finished === '1'))
   );
+
+  const data = filtered.map((book) => ({
+    id: book.id,
+    name: book.name,
+    publisher: book.publisher
+  }));
 
   return h.response({
     status: 'success',
@@ -147,18 +153,17 @@ const detailsBookHandler = (request, h) => {
 const deleteBookHandler = (request, h) => {
   const { bookId } = request.params;
 
-  const data = books.find((book) => book.id === bookId);
+  const index = books.findIndex((v) => v.id === bookId);
 
-  if (!data) {
+  if (index === -1) {
     return h.response({
       status: 'fail',
       message: 'Buku gagal dihapus. Id tidak ditemukan'
     }).code(404);
   }
 
-  const index = books.findIndex((v) => v.id === bookId);
 
-  books.splice(index, 0);
+  books.splice(index, 1);
 
 
   return h.response({
